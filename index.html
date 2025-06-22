@@ -1,68 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TEXNET User Expiry Dashboard</title>
+  <title>User Expiry Dashboard</title>
   <style>
-    body { font-family: sans-serif; padding: 1rem; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { padding: 0.5rem; border: 1px solid #ccc; text-align: left; }
-    input { padding: 0.5rem; width: 100%; max-width: 300px; }
-    .expired { background-color: #ffdddd; }
-    .almost { background-color: #fff6cc; }
-    .active { background-color: #ddffdd; }
-    button { margin-right: 0.25rem; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #999;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .expired {
+      background-color: #ffe5e5;
+    }
+    .active {
+      background-color: #e5ffe5;
+    }
   </style>
 </head>
 <body>
-  <h2>TEXNET User Expiry Dashboard</h2>
-  <input type="text" id="search" placeholder="Search by name or phone..." />
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Phone</th>
-        <th>Expiry</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="userTable"></tbody>
+  <h2>TEXNET HOME FIBER - User Expiry Dashboard</h2>
+
+  <table id="userTable">
+    <tr>
+      <th>Name</th>
+      <th>Phone</th>
+      <th>Expiry</th>
+      <th>Status</th>
+    </tr>
   </table>
+
   <script>
-  fetch('user-expiry.csv')
-    .then(response => response.text())
-    .then(data => {
-      const lines = data.trim().split('\n');
-      const headers = lines[0].split(',');
-      const table = document.getElementById('userTable');
-      const now = new Date();
+    fetch('user-expiry.csv')
+      .then(response => response.text())
+      .then(data => {
+        const lines = data.trim().split('\n');
+        const headers = lines[0].split(',');
+        const table = document.getElementById('userTable');
+        const now = new Date();
 
-      for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(',');
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(',');
 
-        const name = cols[0].trim();
-        const phone = cols[1].trim();
-        const expiryRaw = cols[2].trim();
-        const expiry = new Date(expiryRaw);
+          const name = cols[0].trim();
+          const phone = cols[1].trim();
+          const expiryRaw = cols[2].trim();
+          const expiry = new Date(expiryRaw);
 
-        // 🔍 Fallback if parsing fails
-        if (isNaN(expiry.getTime())) {
-          console.error("Invalid expiry date:", expiryRaw);
-          continue;
+          if (isNaN(expiry.getTime())) {
+            console.warn("Invalid date:", expiryRaw);
+            continue;
+          }
+
+          const isExpired = expiry < now;
+          const status = isExpired ? '❌ Expired' : '✅ Active';
+
+          const row = table.insertRow();
+          row.className = isExpired ? 'expired' : 'active';
+
+          [name, phone, expiryRaw, status].forEach(value => {
+            const cell = row.insertCell();
+            cell.textContent = value;
+          });
         }
-
-        const isExpired = expiry < now;
-        const status = isExpired ? '❌ Expired' : '✅ Active';
-
-        const row = table.insertRow();
-        [name, phone, expiryRaw, status].forEach((value) => {
-          const cell = row.insertCell();
-          cell.textContent = value;
-        });
-      }
-    });
-</script>
+      });
+  </script>
 </body>
 </html>
