@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TEXNET User Expiry Dashboard</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 0.5rem; border: 1px solid #ccc; text-align: left; }
+    input { padding: 0.5rem; width: 100%; max-width: 300px; }
+    .expired { background-color: #ffdddd; }
+    .almost { background-color: #fff6cc; }
+    .active { background-color: #ddffdd; }
+    button { margin-right: 0.25rem; }
+  </style>
+</head>
+<body>
+  <h2>TEXNET User Expiry Dashboard</h2>
+  <input type="text" id="search" placeholder="Search by name or phone..." />
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Expiry</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="userTable"></tbody>
+  </table>
+  <script>
+    const csvUrl = 'https://texnethomefiber.github.io/management-dashboard/user-expiry.csv';
+
+    async function loadCSV() {
+      const res = await fetch(csvUrl);
+      const text = await res.text();
+      const rows = text.trim().split('\n').slice(1); // remove header
+      const table = document.getElementById('userTable');
+      table.innerHTML = '';
+      const now = new Date();
+
+      rows.forEach(row => {
+        const [name, phone, expiryRaw] = row.split(',');
+        const expiry = new Date(expiryRaw);
+        let status = '', cssClass = '';
+        const diff = expiry - now;
+
+        if (diff <= 0) {
+          status = '❌ Expired';
+          cssClass = 'expired';
+        } else if (diff <= 24 * 60 * 60 * 1000) {
+          status = '⚠️ Almost expired';
+          cssClass = 'almost';
+        } else {
+          status = '✅ Active';
+          cssClass = 'active';
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = cssClass;
+        tr.innerHTML = `
+          <td>${name}</td>
+          <td>${phone}</td>
+          <td>${expiryRaw}</td>
+          <td>${status}</td>
+          <td>
+            ${status === '❌ Expired' ? `
+              <button onclick="confirmAction('disable', '${name}')">Disable</button>
+              <button onclick="confirmAction('enable', '${name}')">Enable</button>
+              <button onclick="confirmAction('delete', '${name}')">Delete</button>
+            ` : ''}
+          </td>
+        `;
+        table.appendChild(tr);
+      });
+    }
+
+    function confirmAction(action, user) {
+      if (confirm(`Are you sure you want to ${action.toUpperCase()} user ${user}?`)) {
+        logAction(action, user);
+        // TODO: Hook into MikroTik API call here
+        console.log(`Performing: ${action} for ${user}`);
+      }
+    }
+
+    function logAction(action, user) {
+      console.log(`[${new Date().toLocaleString()}] ${action.toUpperCase()} called for ${user}`);
+    }
+
+    document.getElementById('search').addEventListener('input', function() {
+      const val = this.value.toLowerCase();
+      document.querySelectorAll('#userTable tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
+      });
+    });
+
+    loadCSV();
+  </script>
+</body>
+</html>
