@@ -16,7 +16,10 @@
     .reminder { background-color: #f39c12; color: white; }
     .extend { background-color: #2ecc71; color: white; }
     .stats { background-color: #3498db; color: white; }
-    .enable { background-color: #8e44ad; color: white; }
+    .active-row { background-color: #d4edda; }
+    .almost-row { background-color: #fff3cd; }
+    .expired-row { background-color: #f8d7da; }
+    .invalid-row { background-color: #e2e3e5; }
   </style>
 </head>
 <body>
@@ -46,23 +49,28 @@
 
           let status = "✅ Active";
           let actions = "";
+          let rowClass = "active-row";
 
           if (isNaN(expiry.getTime())) {
             status = "❓ Invalid Date";
+            rowClass = "invalid-row";
           } else if (expiry < now) {
             status = "❌ Expired";
+            rowClass = "expired-row";
             actions = `
               <button class='disable' onclick="confirmAction('Disable ${name}')">Disable</button>
               <button class='delete' onclick="confirmAction('Delete interface for ${name}')">Delete</button>
-              <button class='enable' onclick="confirmAction('Enable ${name}')">Enable</button>
+              <button class='extend' onclick="confirmAction('Enable ${name}')">Enable</button>
             `;
           } else {
             const hoursToExpiry = (expiry - now) / (1000 * 60 * 60);
             if (hoursToExpiry <= 24) {
               status = "⚠️ Almost Expired";
+              rowClass = "almost-row";
               actions = `<button class='reminder' onclick="confirmAction('Send reminder to ${name}')">Send Reminder</button>`;
             } else {
               status = "✅ Active";
+              rowClass = "active-row";
               actions = `
                 <button class='extend' onclick="confirmAction('Extend expiry for ${name}')">Extend</button>
                 <button class='disable' onclick="confirmAction('Disable ${name}')">Disable</button>
@@ -71,6 +79,7 @@
             }
           }
 
+          tr.className = rowClass;
           tr.innerHTML = `
             <td>${name}</td>
             <td>${phone}</td>
