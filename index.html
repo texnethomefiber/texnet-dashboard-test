@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>User Expiry Dashboard</title>
+  <title>User Expiry Dashboard - TEXNET HOME FIBER</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -26,6 +26,15 @@
     .active {
       background-color: #e5ffe5;
     }
+    .actions button {
+      margin-right: 6px;
+    }
+    #log {
+      margin-top: 30px;
+      background: #f9f9f9;
+      padding: 10px;
+      border: 1px dashed #ccc;
+    }
   </style>
 </head>
 <body>
@@ -37,10 +46,19 @@
       <th>Phone</th>
       <th>Expiry</th>
       <th>Status</th>
+      <th>Actions</th>
     </tr>
   </table>
 
+  <div id="log"><strong>Action Log:</strong><br></div>
+
   <script>
+    function logAction(message) {
+      const log = document.getElementById("log");
+      const time = new Date().toLocaleString();
+      log.innerHTML += `[${time}] ${message}<br>`;
+    }
+
     fetch('user-expiry.csv')
       .then(response => response.text())
       .then(data => {
@@ -68,10 +86,35 @@
           const row = table.insertRow();
           row.className = isExpired ? 'expired' : 'active';
 
-          [name, phone, expiryRaw, status].forEach(value => {
-            const cell = row.insertCell();
-            cell.textContent = value;
-          });
+          row.insertCell().textContent = name;
+          row.insertCell().textContent = phone;
+          row.insertCell().textContent = expiryRaw;
+          row.insertCell().textContent = status;
+
+          const actionCell = row.insertCell();
+          if (isExpired) {
+            const disableBtn = document.createElement("button");
+            disableBtn.textContent = "Disable Secret";
+            disableBtn.onclick = () => {
+              if (confirm(`Disable PPP secret for ${name}?`)) {
+                logAction(`Disabled secret for ${name}`);
+              }
+            };
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "Delete Interface";
+            deleteBtn.onclick = () => {
+              if (confirm(`Delete interface for ${name}?`)) {
+                logAction(`Deleted interface for ${name}`);
+              }
+            };
+
+            actionCell.className = "actions";
+            actionCell.appendChild(disableBtn);
+            actionCell.appendChild(deleteBtn);
+          } else {
+            actionCell.textContent = "-";
+          }
         }
       });
   </script>
