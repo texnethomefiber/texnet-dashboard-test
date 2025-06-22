@@ -16,6 +16,7 @@
     .reminder { background-color: #f39c12; color: white; }
     .extend { background-color: #2ecc71; color: white; }
     .stats { background-color: #3498db; color: white; }
+    .enable { background-color: #8e44ad; color: white; }
   </style>
 </head>
 <body>
@@ -53,6 +54,7 @@
             actions = `
               <button class='disable' onclick="confirmAction('Disable ${name}')">Disable</button>
               <button class='delete' onclick="confirmAction('Delete interface for ${name}')">Delete</button>
+              <button class='enable' onclick="confirmAction('Enable ${name}')">Enable</button>
             `;
           } else {
             const hoursToExpiry = (expiry - now) / (1000 * 60 * 60);
