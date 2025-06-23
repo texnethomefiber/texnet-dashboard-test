@@ -2,188 +2,212 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TEXNET HOME FIBER – User Dashboard</title>
-
-  <!-- Basic Styles -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TEXNET User Dashboard</title>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f6f8; }
-    header { background: #0c2540; color: #fff; padding: 16px 24px; position: sticky; top: 0; z-index: 1000;
-             display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-    header h1 { font-size: 1.5rem; margin: 0; }
-    .search { max-width: 250px; }
-    .search input { width: 100%; padding: 6px; border-radius: 5px; border: none; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+    }
 
-    table { width: 100%; border-collapse: collapse; margin: 20px; }
-    thead { background: #e9ecef; }
-    th, td { padding: 12px; text-align: left; }
-    th { cursor: pointer; user-select: none; position: relative; }
-    th.sort-asc::after { content: "▲"; position: absolute; right: 8px; }
-    th.sort-desc::after { content: "▼"; position: absolute; right: 8px; }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+      letter-spacing: 1px;
+    }
 
-    tbody tr:nth-child(even) { background: #fff; }
-    tbody tr:nth-child(odd) { background: #fdfdfd; }
-    tbody tr.expired { background: rgba(244, 67, 54, 0.1); }
-    tbody tr.almost { background: rgba(255, 193, 7, 0.1); }
-    tbody tr.active { background: rgba(76, 175, 80, 0.1); }
+    #searchBox {
+      margin: 20px auto;
+      text-align: center;
+    }
 
-    .icon-btn { cursor: pointer; border: none; background: none; font-size: 1.1rem; margin-right: 8px; }
-    .icon-btn:hover { opacity: 0.7; }
+    #searchBox input {
+      width: 60%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
 
-    .legend { display: flex; gap: 12px; margin: 8px 24px; font-size: 0.9rem; }
-    .legend span { padding: 4px 8px; border-radius: 4px; display: inline-block; }
-    .legend .expired { background: rgba(244, 67, 54, 0.2); }
-    .legend .almost { background: rgba(255, 193, 7, 0.2); }
-    .legend .active { background: rgba(76, 175, 80, 0.2); }
+    table {
+      width: 90%;
+      margin: 10px auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
 
-    .pagination { margin: 0 24px; display: flex; gap: 8px; align-items: center; }
-    .pagination button { padding: 6px 12px; border: none; background: #0c2540; color: #fff; border-radius: 4px; }
-    .pagination button:disabled { opacity: 0.5; }
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
 
-    @media (max-width: 600px) {
-      table, tr, td, th { display: block; }
-      tr { margin-bottom: 16px; }
-      th, td { padding: 8px; }
-      thead { display: none; }
-      td { position: relative; padding-left: 50%; }
-      td::before { position: absolute; left: 16px; top: 8px; white-space: nowrap; font-weight: bold; }
-      td:nth-of-type(1)::before { content: "Name"; }
-      td:nth-of-type(2)::before { content: "Phone"; }
-      td:nth-of-type(3)::before { content: "Expiry"; }
-      td:nth-of-type(4)::before { content: "Status"; }
-      td:nth-of-type(5)::before { content: "Actions"; }
+    th {
+      background: #34495e;
+      color: white;
+    }
+
+    .expired {
+      background-color: #ffdddd;
+      color: #d8000c;
+    }
+
+    .almost {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+
+    .active {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .pagination {
+      text-align: center;
+      margin: 20px;
+    }
+
+    .pagination button {
+      padding: 10px 15px;
+      margin: 0 5px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .pagination button:disabled {
+      background-color: #ccc;
+      cursor: default;
     }
   </style>
-
-  <!-- Dependencies -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-  <header>
-    <h1>TEXNET HOME FIBER • User Dashboard</h1>
-    <div class="search">
-      <input type="text" id="searchInput" placeholder="Search by name or phone…" />
-    </div>
-  </header>
+  <header>TEXNET USER DASHBOARD</header>
 
-  <div class="legend">
-    <span class="expired">Expired</span>
-    <span class="almost">Expiring Soon</span>
-    <span class="active">Active</span>
+  <div id="searchBox">
+    <input type="text" id="searchInput" placeholder="Search by name or phone..." />
   </div>
 
   <table id="userTable">
     <thead>
       <tr>
-        <th data-col="Name">Name</th>
-        <th data-col="Phone">Phone</th>
-        <th data-col="Expiry">Expiry</th>
-        <th data-col="Status">Status</th>
-        <th>Actions</th>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Status</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
   <div class="pagination">
-    <button id="prevBtn" disabled>Prev</button>
-    <span id="pageInfo">Page 1</span>
-    <button id="nextBtn" disabled>Next</button>
+    <button id="prevBtn">Previous</button>
+    <span id="pageInfo"></span>
+    <button id="nextBtn">Next</button>
   </div>
 
   <script>
     const CSV_URL = 'https://raw.githubusercontent.com/texnethomefiber/texnet-dashboard-test/main/user-expiry.csv';
-    const ROWS_PER_PAGE = 10;
-    let allUsers = [], filtered = [], currentPage = 1;
-    const cols = ['Name', 'Phone', 'Expiry'];
+    const tableBody = document.querySelector("#userTable tbody");
+    const searchInput = document.getElementById("searchInput");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const pageInfo = document.getElementById("pageInfo");
 
-    const calcStatus = dateStr => {
-      const d = new Date(dateStr), now = new Date();
-      if (isNaN(d)) return 'unknown';
-      const diffH = (d - now) / 36e5;
-      if (diffH < 0) return 'expired';
-      if (diffH <= 24) return 'almost';
-      return 'active';
-    };
+    let allUsers = [];
+    let filteredUsers = [];
+    let currentPage = 1;
+    const rowsPerPage = 10;
 
-    const renderTable = () => {
-      const tbody = document.querySelector('#userTable tbody');
-      tbody.innerHTML = '';
-      const start = (currentPage - 1) * ROWS_PER_PAGE;
-      const pageUsers = filtered.slice(start, start + ROWS_PER_PAGE);
-      pageUsers.forEach(u => {
-        const st = calcStatus(u.Expiry);
-        const tr = document.createElement('tr');
-        tr.className = st === 'unknown' ? '' : st;
-        cols.forEach(c => {
-          const td = document.createElement('td');
-          td.textContent = u[c];
-          tr.appendChild(td);
-        });
-        const statusTD = document.createElement('td');
-        statusTD.textContent = st.charAt(0).toUpperCase() + st.slice(1);
-        tr.appendChild(statusTD);
+    function determineStatus(expiry) {
+      const now = new Date();
+      const expDate = new Date(expiry);
+      const diff = (expDate - now) / (1000 * 60 * 60); // in hours
 
-        const actionsTD = document.createElement('td');
-        ['Enable','Disable','Delete'].forEach(act => {
-          const btn = document.createElement('button');
-          btn.textContent = act[0];
-          btn.title = act;
-          btn.className = 'icon-btn';
-          btn.onclick = () => {
-            if (confirm(`${act} user ${u.Name}?`)) alert(`${act} ${u.Name}`);
-          };
-          if (
-            (act === 'Enable' && st === 'expired') ||
-            (act === 'Disable' && st === 'active') ||
-            (act === 'Delete')
-          ) {
-            actionsTD.appendChild(btn);
-          }
-        });
-        tr.appendChild(actionsTD);
-        tbody.appendChild(tr);
+      if (diff <= 0) return 'Expired';
+      if (diff <= 24) return 'Almost Expired';
+      return 'Active';
+    }
+
+    function renderTable(data) {
+      const start = (currentPage - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      const paginatedData = data.slice(start, end);
+
+      tableBody.innerHTML = "";
+
+      paginatedData.forEach(user => {
+        const row = document.createElement("tr");
+        const status = determineStatus(user.exp);
+
+        row.className =
+          status === "Expired" ? "expired" :
+          status === "Almost Expired" ? "almost" :
+          "active";
+
+        row.innerHTML = `
+          <td>${user.name}</td>
+          <td>${user.phone}</td>
+          <td>${status}</td>
+        `;
+        tableBody.appendChild(row);
       });
 
-      document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${Math.ceil(filtered.length / ROWS_PER_PAGE)}`;
-      document.getElementById('prevBtn').disabled = currentPage === 1;
-      document.getElementById('nextBtn').disabled = currentPage * ROWS_PER_PAGE >= filtered.length;
-    };
+      pageInfo.textContent = `Page ${currentPage} of ${Math.ceil(data.length / rowsPerPage)}`;
+      prevBtn.disabled = currentPage === 1;
+      nextBtn.disabled = end >= data.length;
+    }
 
-    const searchAndRender = () => {
-      const query = document.getElementById('searchInput').value.toLowerCase();
-      filtered = allUsers.filter(u =>
-        u.Name.toLowerCase().includes(query) ||
-        u.Phone.toLowerCase().includes(query)
+    function filterData(searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      filteredUsers = allUsers.filter(user =>
+        user.name.toLowerCase().includes(lower) || user.phone.includes(lower)
       );
       currentPage = 1;
-      renderTable();
-    };
+      renderTable(filteredUsers);
+    }
 
-    document.querySelector('th[data-col]').forEach(th => {
-      th.onclick = () => {
-        const col = th.getAttribute('data-col');
-        const dir = th.classList.contains('sort-asc') ? -1 : 1;
-        allUsers.sort((a, b) => a[col] > b[col] ? dir : -dir);
-        th.parentNode.querySelectorAll('th').forEach(x => x.classList.remove('sort-asc','sort-desc'));
-        th.classList.add(dir === 1 ? 'sort-asc' : 'sort-desc');
-        searchAndRender();
-      };
+    fetch(CSV_URL)
+      .then(res => res.text())
+      .then(data => {
+        allUsers = data.split("\n")
+          .map(line => {
+            const match = line.match(/name=(.*?);exp=(.*?);phone=(.*)/);
+            if (match) {
+              return { name: match[1], exp: match[2], phone: match[3] };
+            }
+            return null;
+          })
+          .filter(user => user !== null);
+
+        filteredUsers = allUsers;
+        renderTable(filteredUsers);
+      });
+
+    searchInput.addEventListener("input", () => {
+      filterData(searchInput.value);
     });
 
-    document.getElementById('prevBtn').onclick = () => { if (currentPage > 1) { currentPage--; renderTable(); } };
-    document.getElementById('nextBtn').onclick = () => { currentPage++; renderTable(); };
-
-    Papa.parse(CSV_URL, {
-      download: true, header: true, skipEmptyLines: true,
-      complete: res => {
-        allUsers = res.data;
-        filtered = allUsers;
-        renderTable();
+    prevBtn.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderTable(filteredUsers);
       }
     });
 
-    document.getElementById('searchInput').addEventListener('input', searchAndRender);
+    nextBtn.addEventListener("click", () => {
+      if ((currentPage * rowsPerPage) < filteredUsers.length) {
+        currentPage++;
+        renderTable(filteredUsers);
+      }
+    });
   </script>
 </body>
-  </html>
+</html>
