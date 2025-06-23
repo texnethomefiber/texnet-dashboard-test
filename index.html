@@ -3,125 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TEXNET HOME FIBER Dashboard</title>
+  <title>TEXNET User Dashboard</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-    th { background-color: #333; color: white; }
-    tr:hover { background-color: #f1f1f1; }
-    button { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-right: 4px; }
-    .disable { background-color: #e74c3c; color: white; }
-    .delete { background-color: #c0392b; color: white; }
-    .reminder { background-color: #f39c12; color: white; }
-    .extend { background-color: #2ecc71; color: white; }
-    .stats { background-color: #3498db; color: white; }
-    .enable { background-color: #8e44ad; color: white; }
-    .status-expired { background-color: #fdd; }
-    .status-active { background-color: #dfd; }
-    .status-almost { background-color: #ffd; }
-    .status-invalid { background-color: #eee; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
+    header {
+      background: #0c2540; color: white; padding: 20px; text-align: center;
+      font-size: 1.8em; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .user-card {
+      background: white; margin: 20px auto; width: 90%; max-width: 500px;
+      border-left: 10px solid #4CAF50; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 20px; border-radius: 8px;
+    }
+    .expired   { border-left-color: #f44336; }
+    .warning   { border-left-color: #ff9800; }
+    .active    { border-left-color: #4CAF50; }
+    .user-info { margin-bottom: 15px; }
+    .user-info strong { display: inline-block; width: 100px; }
+    .actions button {
+      margin-right: 10px; padding: 10px 15px; font-size: 0.9em;
+      border: none; border-radius: 5px; cursor: pointer;
+    }
+    .enable-btn  { background: #4CAF50; color: white; }
+    .disable-btn { background: #f44336; color: white; }
+    .delete-btn  { background: #555;    color: white; }
   </style>
-</head>
-<body>
-  <h1>TEXNET HOME FIBER User Dashboard</h1>
-  <label for="statusFilter">Filter by Status:</label>
-  <select id="statusFilter">
-    <option value="all">Show All</option>
-    <option value="status-active">Active</option>
-    <option value="status-almost">Almost Expired</option>
-    <option value="status-expired">Expired</option>
-    <option value="status-invalid">Invalid Date</option>
-  </select>
-
-  <table id="userTable">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Phone</th>
-        <th>Expiry</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
-    fetch("user-expiry.csv")
-      .then((response) => response.text())
-      .then((data) => {
-        const rows = data.trim().split("\n").slice(1);
-        const now = new Date();
-        const tbody = document.querySelector("#userTable tbody");
+    const CSV_URL = 'https://raw.githubusercontent.com/texnethomefiber/texnet-dashboard-test/main/user-expiry.csv';
 
-        rows.forEach((row) => {
-          const [name, phone, expiryStr] = row.split(",");
-          const expiry = new Date(expiryStr.trim());
-          const tr = document.createElement("tr");
-
-          let status = "✅ Active";
-          let actions = "";
-          let className = "status-active";
-
-          if (isNaN(expiry.getTime())) {
-            status = "❓ Invalid Date";
-            className = "status-invalid";
-          } else if (expiry < now) {
-            status = "❌ Expired";
-            className = "status-expired";
-            actions = `
-              <button class='disable' onclick="confirmAction('Disable ${name}')">Disable</button>
-              <button class='delete' onclick="confirmAction('Delete interface for ${name}')">Delete</button>
-              <button class='enable' onclick="confirmAction('Enable ${name}')">Enable</button>
-            `;
-          } else {
-            const hoursToExpiry = (expiry - now) / (1000 * 60 * 60);
-            if (hoursToExpiry <= 24) {
-              status = "⚠️ Almost Expired";
-              className = "status-almost";
-              actions = `<button class='reminder' onclick="confirmAction('Send reminder to ${name}')">Send Reminder</button>`;
-            } else {
-              status = "✅ Active";
-              className = "status-active";
-              actions = `
-                <button class='extend' onclick="confirmAction('Extend expiry for ${name}')">Extend</button>
-                <button class='disable' onclick="confirmAction('Disable ${name}')">Disable</button>
-                <button class='stats' onclick="confirmAction('View stats for ${name}')">Stats</button>
-              `;
-            }
-          }
-
-          tr.className = className;
-          tr.innerHTML = `
-            <td>${name}</td>
-            <td>${phone}</td>
-            <td>${expiryStr}</td>
-            <td>${status}</td>
-            <td>${actions}</td>
-          `;
-
-          tbody.appendChild(tr);
-        });
-      });
-
-    function confirmAction(message) {
-      if (confirm(message + "?")) {
-        console.log("Action confirmed: " + message);
-        // Trigger backend API or log the action here
-      }
+    function statusOf(expiryStr) {
+      const expiry = new Date(expiryStr);
+      const now = new Date();
+      if (isNaN(expiry)) return 'invalid';
+      if (expiry < now) return 'expired';
+      const hours = (expiry - now) / 36e5;
+      return hours <= 24 ? 'warning' : 'active';
     }
 
-    document.getElementById("statusFilter").addEventListener("change", function () {
-      const selected = this.value;
-      document.querySelectorAll("#userTable tbody tr").forEach((row) => {
-        if (selected === "all" || row.classList.contains(selected)) {
-          row.style.display = "";
-        } else {
-          row.style.display = "none";
+    function renderUsers(data) {
+      const container = document.createElement('div');
+      data.forEach((row) => {
+        const { Name, Phone, Expiry } = row;
+        const status = statusOf(Expiry);
+        const card = document.createElement('div');
+        card.className = `user-card ${status}`;
+        const info = document.createElement('div');
+        info.className = 'user-info';
+        info.innerHTML = `<strong>Name:</strong> ${Name}<br><strong>Phone:</strong> ${Phone}<br><strong>Status:</strong> ${status.charAt(0).toUpperCase() + status.slice(1)}`;
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+        if (status === 'expired' || status === 'warning') {
+          actions.innerHTML = `<button class="enable-btn" onclick="alert('Enable ${Name}')">Enable</button>`;
         }
+        if (status === 'active' || status === 'warning') {
+          actions.innerHTML += `<button class="disable-btn" onclick="alert('Disable ${Name}')">Disable</button>`;
+        }
+        actions.innerHTML += `<button class="delete-btn" onclick="alert('Delete ${Name}')">Delete</button>`;
+        card.append(info, actions);
+        container.appendChild(card);
+      });
+      document.body.appendChild(container);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      Papa.parse(CSV_URL, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          renderUsers(results.data);
+        },
       });
     });
   </script>
+</head>
+<body>
+  <header>TEXNET HOME FIBER - USER DASHBOARD</header>
 </body>
 </html>
